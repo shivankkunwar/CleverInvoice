@@ -3,6 +3,10 @@
 Your go-to solution for effortless invoice extraction and organization powered by generative AI
 
 
+
+
+https://github.com/user-attachments/assets/fe88412b-ff09-4b75-b39a-85525c7bae2c
+
 ## Features
 
 ### AI-Powered Data Extraction
