@@ -10,7 +10,7 @@ import { extractDataFromFile } from "../utils/genAI";
 import { useDispatch } from "react-redux";
 import { useToast } from "@/hooks/use-toast";
 
-const Sidebar = ({ activeTab, setActiveTab }) => {
+const Sidebar = ({ activeTab, setActiveTab }:any) => {
   const { toast } = useToast();
   const dispatch = useDispatch();
   const [isOpen, setIsOpen] = useState(false);

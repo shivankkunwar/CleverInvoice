@@ -1,8 +1,8 @@
 import { Loader2 } from "lucide-react";
 import { FaCloudUploadAlt } from "react-icons/fa";
 
-const FileUpload = ({ onUpload, loading }) => {
-  const handleFileChange = (event) => {
+const FileUpload = ({ onUpload, loading } : any) => {
+  const handleFileChange = (event:any) => {
     onUpload(event.target.files[0]);
   };
 

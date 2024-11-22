@@ -2,7 +2,7 @@ import * as XLSX from "xlsx";
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-export async function extractDataFromFile(file) {
+export async function extractDataFromFile(file:any) {
   const prompt = `Analyze this document and extract all information, organizing it into three distinct sections: Invoices, Products, and Customers. Parse all entries and maintain relationships between them. Provide the data in the following structured JSON format:
 
 {
@@ -71,7 +71,9 @@ Required Fields:
 - Products: name, totalQuantity, unitPrice, tax, priceWithTax
 - Customers: name, phoneNumber, companyName, totalPurchaseAmount`;
   try {
-    const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_KEY);
+    const genAI = new GoogleGenerativeAI(
+      import.meta.env.VITE_GEMINI_KEY
+    );
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     let content: string;
@@ -114,6 +116,7 @@ Required Fields:
     };
   } catch (error) {
     console.error("Error processing file:", error);
+    
   }
 }
 
@@ -136,40 +139,43 @@ const extractExcelContent = async (file: File): Promise<string> => {
   });
 };
 
-function cleanAndParseJSON(response: string) {
+function cleanAndParseJSON(response: any) {
   try {
     return JSON.parse(response);
-  } catch (e) {}
+  } catch (e) {
+     }
 
   try {
-    if (typeof response === "object" && response.text) {
+    if (typeof response === 'object' && response.text) {
       response = response.text;
     }
-  } catch (e) {}
+  } catch (e) {
+     }
+
 
   const responseStr = String(response);
+
   const jsonRegex = /```(?:json)?\s*(\{[\s\S]*?\})\s*```/;
-  const match = responseStr.match(jsonRegex);
+  
+   const match = responseStr.match(jsonRegex);
   if (match && match[1]) {
     try {
       return JSON.parse(match[1].trim());
-    } catch (e) {
-      throw new Error(
-        "Found JSON-like content in markdown but failed to parse: " + e.message
-      );
+    } catch (e:any) {
+      throw new Error('Found JSON-like content in markdown but failed to parse: ' + e.message);
     }
   }
+
+  
   const jsonContentRegex = /\{[\s\S]*\}/;
   const jsonMatch = responseStr.match(jsonContentRegex);
   if (jsonMatch) {
     try {
       return JSON.parse(jsonMatch[0]);
-    } catch (e) {
-      throw new Error(
-        "Found JSON-like content but failed to parse: " + e.message
-      );
+    } catch (e:any) {
+      throw new Error('Found JSON-like content but failed to parse: ' + e.message);
     }
   }
 
-  throw new Error("No valid JSON content found in the response");
+  throw new Error('No valid JSON content found in the response');
 }

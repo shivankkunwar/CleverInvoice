@@ -17,7 +17,7 @@ function LandingPage() {
   const navigate = useNavigate();
   const [isUploading, setIsUploading] = useState(false);
   const { toast } = useToast();
-  const handleFileUpload = async (event) => {
+  const handleFileUpload = async (event:any) => {
     const file = event.target.files[0];
     if (!file) return;
 
