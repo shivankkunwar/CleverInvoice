@@ -5,7 +5,8 @@ import { Provider } from 'react-redux';
 import store from "./redux/store.ts"
 import { Toaster } from "@/components/ui/toaster"
 import App from './App.tsx'
-
+import { inject } from "@vercel/analytics";
+inject();
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
    <Provider store={store}><App/></Provider>
