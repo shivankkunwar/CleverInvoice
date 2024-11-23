@@ -90,6 +90,7 @@ function LandingPage() {
             variant="outline"
             size="sm"
             className="text-white bg-slate-950 p-5 border-white/20 hover:bg-white/10 hover:text-white"
+            onClick={()=>redirectButton("github")}
           >
             <FiGithub className="mr-2" />
             GitHub
@@ -98,6 +99,7 @@ function LandingPage() {
             variant="outline"
             size="sm"
             className="text-white bg-slate-950 p-5 border-white/20 hover:bg-white/10 hover:text-white"
+            onClick={()=>redirectButton("docs")}
           >
             <FiBookOpen className="mr-2" />
             Docs
