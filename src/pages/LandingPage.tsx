@@ -42,6 +42,7 @@ function LandingPage() {
   };
 
   function redirectButton(path: string) {
+    console.log(path)
     const url = path === "github"
       ? "https://github.com/shivankkunwar/CleverInvoice"
       : "https://github.com/shivankkunwar/CleverInvoice/blob/main/README.md";
