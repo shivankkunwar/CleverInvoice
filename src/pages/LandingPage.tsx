@@ -41,6 +41,15 @@ function LandingPage() {
     }
   };
 
+  function redirectButton (path: string){
+    if(path === "github")
+      window.open(
+        "https://github.com/shivankkunwar/CleverInvoice",
+        "_blank"
+      );
+    else 
+      window.open("https://github.com/shivankkunwar/CleverInvoice/blob/main/README.md", "_blank")
+  }
   return (
     <div className="relative flex flex-col items-center justify-center min-h-screen w-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 text-white overflow-hidden">
       <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]"></div>
@@ -55,6 +64,7 @@ function LandingPage() {
             variant="outline"
             size="sm"
             className="text-white bg-slate-950 p-5 border-white/20 hover:bg-white/10"
+            onClick={()=>redirectButton("github")}
           >
             <FiGithub className="mr-2" />
             GitHub
@@ -63,6 +73,7 @@ function LandingPage() {
             variant="outline"
             size="sm"
             className="text-white bg-slate-950 p-5 border-white/20 hover:bg-white/10"
+            onClick={()=>redirectButton("docss")}
           >
             <FiBookOpen className="mr-2" />
             Docs
