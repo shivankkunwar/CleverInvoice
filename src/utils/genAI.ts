@@ -74,7 +74,7 @@ Required Fields:
     const genAI = new GoogleGenerativeAI(
       import.meta.env.VITE_GEMINI_KEY
     );
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
     let content: string;
     if (
@@ -140,24 +140,31 @@ const extractExcelContent = async (file: File): Promise<string> => {
 };
 
 function cleanAndParseJSON(response: any) {
+  // First check if the response is already a JSON string
   try {
     return JSON.parse(response);
   } catch (e) {
-     }
+    // Not a direct JSON string, continue with extraction
+  }
 
+  // Try to extract JSON from a response object with 'text' property
   try {
     if (typeof response === 'object' && response.text) {
       response = response.text;
     }
   } catch (e) {
-     }
+    // Response is not an object with text property, continue with string processing
+  }
 
-
+  // Convert response to string if it isn't already
   const responseStr = String(response);
 
+  // Regular expression to match JSON content within markdown code blocks
+  // This handles both ```json and ``` markers
   const jsonRegex = /```(?:json)?\s*(\{[\s\S]*?\})\s*```/;
   
-   const match = responseStr.match(jsonRegex);
+  // Try to extract JSON from markdown code blocks
+  const match = responseStr.match(jsonRegex);
   if (match && match[1]) {
     try {
       return JSON.parse(match[1].trim());
@@ -166,7 +173,7 @@ function cleanAndParseJSON(response: any) {
     }
   }
 
-  
+  // If we couldn't find markdown-wrapped JSON, try to find any JSON-like content
   const jsonContentRegex = /\{[\s\S]*\}/;
   const jsonMatch = responseStr.match(jsonContentRegex);
   if (jsonMatch) {
