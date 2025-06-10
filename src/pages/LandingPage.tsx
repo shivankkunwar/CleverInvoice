@@ -4,9 +4,10 @@ import { motion } from "framer-motion";
 import { GiBrain } from "react-icons/gi";
 import { FiUploadCloud, FiGithub, FiBookOpen } from "react-icons/fi";
 
-import { addInvoices } from "@/redux/slices/invoicesSlice.ts";
+import { addInvoices, createDataset } from "@/redux/slices/invoicesSlice.ts";
 import { addProducts } from "@/redux/slices/productsSlice";
 import { addCustomers } from "@/redux/slices/customersSlice";
+import { setActiveDatasetName } from "@/redux/slices/uiSlice";
 import { extractDataFromFile } from "@/utils/genAI";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -24,9 +25,22 @@ function LandingPage() {
     setIsUploading(true);
     try {
       const data = await extractDataFromFile(file);
-      dispatch(addInvoices(data?.invoices));
-      dispatch(addProducts(data?.products));
-      dispatch(addCustomers(data?.customers));
+      const defaultDatasetName = "Default Dataset";
+      
+      // Create the default dataset and set it as active
+      dispatch(createDataset(defaultDatasetName));
+      dispatch(setActiveDatasetName(defaultDatasetName));
+      
+      // Handle the new dataset-based structure
+      if (data?.invoices && data.invoices.length > 0) {
+        dispatch(addInvoices({ datasetName: defaultDatasetName, invoices: data.invoices }));
+      }
+      if (data?.products && data.products.length > 0) {
+        dispatch(addProducts(data.products));
+      }
+      if (data?.customers && data.customers.length > 0) {
+        dispatch(addCustomers(data.customers));
+      }
       navigate("/dashboard");
     } catch (error) {
       console.error("Error extracting data:", error);

@@ -160,7 +160,7 @@ const InvoicesTab: React.FC = () => {
       toast({
         title: "Cannot Generate PDF",
         description: "No active dataset or no invoices to generate a report.",
-        variant: "warning",
+        variant: "destructive",
       });
     }
   };

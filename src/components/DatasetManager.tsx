@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/redux/store';
-import { createDataset, renameDataset, deleteDataset } from '@/redux/slices/invoicesSlice';
+import { createDataset } from '@/redux/slices/invoicesSlice';
 import { setActiveDatasetName } from '@/redux/slices/uiSlice';
 import { selectDatasetNames } from '@/redux/selectors';
 import { Button } from '@/components/ui/button';

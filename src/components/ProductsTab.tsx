@@ -71,7 +71,7 @@ const ProductsTab: React.FC = () => {
         toast({
           title: "Product Name Changed",
           description: "Product name updated, but no active dataset selected to update associated invoices.",
-          variant: "warning",
+          variant: "destructive",
         });
       }
 

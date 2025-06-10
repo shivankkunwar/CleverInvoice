@@ -24,7 +24,7 @@ const Sidebar = ({ activeTab, setActiveTab }:any) => {
       toast({
         title: "No Active Dataset",
         description: "Please select or create a dataset before uploading a file.",
-        variant: "warning",
+        variant: "destructive",
       });
       return;
     }
