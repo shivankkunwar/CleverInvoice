@@ -108,15 +108,21 @@ Required Fields:
       { text: prompt },
     ]);
 
-    const parsedResult = cleanAndParseJSON(result.response.text());
+    console.log("Raw API response:", result);
+    const rawResponse = result.response.text();
+    console.log("Raw response text:", rawResponse);
+    
+    const parsedResult = cleanAndParseJSON(rawResponse);
+    console.log("Parsed result:", parsedResult);
+    
     return {
-      invoices: parsedResult.invoices,
-      products: parsedResult.products,
-      customers: parsedResult.customers,
+      invoices: parsedResult.invoices || [],
+      products: parsedResult.products || [],
+      customers: parsedResult.customers || [],
     };
   } catch (error) {
     console.error("Error processing file:", error);
-    
+    throw error; // Re-throw the error so it can be handled by the calling code
   }
 }
 
@@ -140,24 +146,29 @@ const extractExcelContent = async (file: File): Promise<string> => {
 };
 
 function cleanAndParseJSON(response: any) {
-  // First check if the response is already a JSON string
-  try {
-    return JSON.parse(response);
-  } catch (e) {
-    // Not a direct JSON string, continue with extraction
-  }
-
-  // Try to extract JSON from a response object with 'text' property
-  try {
-    if (typeof response === 'object' && response.text) {
-      response = response.text;
+  console.log("Input to cleanAndParseJSON:", response);
+  
+  // Handle the case where response is still the full API response object
+  if (response && typeof response === 'object' && response.candidates && response.candidates.length > 0) {
+    const candidate = response.candidates[0];
+    if (candidate.content && candidate.content.parts && candidate.content.parts.length > 0) {
+      response = candidate.content.parts[0].text;
+      console.log("Extracted text from API response structure:", response);
     }
-  } catch (e) {
-    // Response is not an object with text property, continue with string processing
   }
 
   // Convert response to string if it isn't already
   const responseStr = String(response);
+  console.log("Response as string:", responseStr);
+
+  // First try to parse as direct JSON
+  try {
+    const parsed = JSON.parse(responseStr);
+    console.log("Parsed as direct JSON:", parsed);
+    return parsed;
+  } catch (e) {
+    console.log("Not direct JSON, trying to extract from markdown");
+  }
 
   // Regular expression to match JSON content within markdown code blocks
   // This handles both ```json and ``` markers
@@ -167,8 +178,13 @@ function cleanAndParseJSON(response: any) {
   const match = responseStr.match(jsonRegex);
   if (match && match[1]) {
     try {
-      return JSON.parse(match[1].trim());
+      const cleanedJson = match[1].trim();
+      console.log("Extracted JSON from markdown:", cleanedJson);
+      const parsed = JSON.parse(cleanedJson);
+      console.log("Successfully parsed JSON from markdown:", parsed);
+      return parsed;
     } catch (e:any) {
+      console.error('Found JSON-like content in markdown but failed to parse:', e.message);
       throw new Error('Found JSON-like content in markdown but failed to parse: ' + e.message);
     }
   }
@@ -178,11 +194,17 @@ function cleanAndParseJSON(response: any) {
   const jsonMatch = responseStr.match(jsonContentRegex);
   if (jsonMatch) {
     try {
-      return JSON.parse(jsonMatch[0]);
+      const cleanedJson = jsonMatch[0];
+      console.log("Extracted JSON-like content:", cleanedJson);
+      const parsed = JSON.parse(cleanedJson);
+      console.log("Successfully parsed JSON-like content:", parsed);
+      return parsed;
     } catch (e:any) {
+      console.error('Found JSON-like content but failed to parse:', e.message);
       throw new Error('Found JSON-like content but failed to parse: ' + e.message);
     }
   }
 
+  console.error('No valid JSON content found. Full response:', responseStr);
   throw new Error('No valid JSON content found in the response');
 }

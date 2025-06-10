@@ -13,14 +13,24 @@ import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { Pencil, Save, ChevronDown, ChevronUp } from "lucide-react";
 import { updateCustomer } from "@/redux/slices/customersSlice";
-import { updateInvoicesForCustomer } from "@/redux/slices/invoicesSlice";
-import { selectCustomers } from "@/redux/selectors";
+// Removed: import { updateInvoicesForCustomer } from "@/redux/slices/invoicesSlice";
+import { updateInvoice, Invoice } from "@/redux/slices/invoicesSlice"; // Added updateInvoice and Invoice type
+import { selectCustomers, selectInvoices } from "@/redux/selectors"; // Added selectInvoices
+import { RootState } from "@/redux/store"; // Added RootState for activeDatasetName
+import { useToast } from "@/hooks/use-toast"; // Added useToast
 
 const CustomersTab: React.FC = () => {
   const dispatch = useDispatch();
+  const { toast } = useToast();
   const customers = useSelector(selectCustomers);
+  const activeDatasetName = useSelector((state: RootState) => state.ui.activeDatasetName);
+  // Memoize invoices for the active dataset
+  const invoicesForCurrentDataset = useSelector((state: RootState) =>
+    activeDatasetName ? selectInvoices(state, activeDatasetName) : []
+  );
+
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editedCustomer, setEditedCustomer] = useState<any | null>(null);
+  const [editedCustomer, setEditedCustomer] = useState<any | null>(null); // Consider using a proper type for customer
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const handleEdit = (customer: any) => {
@@ -30,18 +40,45 @@ const CustomersTab: React.FC = () => {
 
   const handleSave = () => {
     if (editedCustomer) {
-      dispatch(updateCustomer(editedCustomer));
-      if (
-        editedCustomer.name !==
-        customers.find((c) => c.id === editedCustomer.id)?.name
-      ) {
-        dispatch(
-          updateInvoicesForCustomer({
-            name: customers.find((c) => c.id === editedCustomer.id)?.name || "",
-            updates: { customerName: editedCustomer.name },
-          })
-        );
+      const originalCustomer = customers.find((c) => c.id === editedCustomer.id);
+      const originalCustomerName = originalCustomer?.name;
+
+      dispatch(updateCustomer(editedCustomer)); // Update the customer itself
+
+      if (activeDatasetName && originalCustomerName && editedCustomer.name !== originalCustomerName) {
+        if (invoicesForCurrentDataset.length > 0) {
+          let updatedInvoicesCount = 0;
+          invoicesForCurrentDataset.forEach((invoice: Invoice) => {
+            if (invoice.customerName === originalCustomerName) {
+              dispatch(
+                updateInvoice({
+                  datasetName: activeDatasetName,
+                  id: invoice.id,
+                  updates: { customerName: editedCustomer.name },
+                })
+              );
+              updatedInvoicesCount++;
+            }
+          });
+          if (updatedInvoicesCount > 0) {
+            toast({
+              title: "Invoices Updated",
+              description: `${updatedInvoicesCount} invoice(s) in dataset '${activeDatasetName}' updated with new customer name.`,
+            });
+          }
+        }
+      } else if (!activeDatasetName && originalCustomerName && editedCustomer.name !== originalCustomerName) {
+        toast({
+          title: "Customer Name Changed",
+          description: "Customer name updated, but no active dataset selected to update associated invoices.",
+          variant: "destructive",
+        });
       }
+
+      toast({
+        title: "Customer Saved",
+        description: `Customer "${editedCustomer.name}" has been saved.`,
+      });
       setEditingId(null);
       setEditedCustomer(null);
     }
