@@ -3,26 +3,50 @@ import { GiBrain } from "react-icons/gi";
 import { Menu, X } from "lucide-react";
 import classnames from "classnames";
 import FileUpload from "./FileUpload";
+import DatasetManager from "./DatasetManager"; // Import DatasetManager
 import { addInvoices } from "@/redux/slices/invoicesSlice";
 import { addProducts } from "@/redux/slices/productsSlice";
 import { addCustomers } from "@/redux/slices/customersSlice";
 import { extractDataFromFile } from "../utils/genAI";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux"; // Import useSelector
+import { RootState } from "@/redux/store"; // Import RootState
 import { useToast } from "@/hooks/use-toast";
 
 const Sidebar = ({ activeTab, setActiveTab }:any) => {
   const { toast } = useToast();
   const dispatch = useDispatch();
+  const activeDatasetName = useSelector((state: RootState) => state.ui.activeDatasetName); // Get activeDatasetName
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+
   const handleFileUpload = async (file: any) => {
+    if (!activeDatasetName) {
+      toast({
+        title: "No Active Dataset",
+        description: "Please select or create a dataset before uploading a file.",
+        variant: "warning",
+      });
+      return;
+    }
     try {
       setLoading(true);
       const data = await extractDataFromFile(file);
       console.log(data);
-      dispatch(addInvoices(data?.invoices));
-      dispatch(addProducts(data?.products));
-      dispatch(addCustomers(data?.customers));
+      // Pass datasetName to addInvoices
+      if (data?.invoices && data.invoices.length > 0) {
+        dispatch(addInvoices({ datasetName: activeDatasetName, invoices: data.invoices }));
+      }
+      // Products and Customers are not dataset-specific in this model, but if they were, you'd adapt here.
+      if (data?.products && data.products.length > 0) {
+        dispatch(addProducts(data.products));
+      }
+      if (data?.customers && data.customers.length > 0) {
+        dispatch(addCustomers(data.customers));
+      }
+      toast({
+        title: "Success",
+        description: `Data extracted and added to dataset "${activeDatasetName}".`,
+      });
     } catch (error) {
       console.error("Error extracting data:", error);
       toast({
@@ -70,8 +94,13 @@ const Sidebar = ({ activeTab, setActiveTab }:any) => {
           <h1 className="text-xl font-bold">Clever Invoice</h1>
         </div>
 
+        {/* Add DatasetManager here */}
+        <div className="px-2 py-2 border-b border-gray-700">
+          <DatasetManager />
+        </div>
+
         <div className="px-6 py-4 border-b border-gray-700">
-          <FileUpload onUpload={handleFileUpload} loading={loading} />
+          <FileUpload onUpload={handleFileUpload} loading={loading} disabled={!activeDatasetName || loading} />
         </div>
 
         <nav className="flex-grow px-6 py-4">
