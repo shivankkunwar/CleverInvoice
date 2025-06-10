@@ -13,14 +13,24 @@ import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { Pencil, Save, ChevronDown, ChevronUp } from "lucide-react";
 import { updateProduct } from "@/redux/slices/productsSlice";
-import { updateInvoicesForProduct } from "@/redux/slices/invoicesSlice";
-import { selectProducts } from "@/redux/selectors";
+// Removed: import { updateInvoicesForProduct } from "@/redux/slices/invoicesSlice";
+import { updateInvoice, Invoice } from "@/redux/slices/invoicesSlice"; // Added updateInvoice and Invoice type
+import { selectProducts, selectInvoices } from "@/redux/selectors"; // Added selectInvoices
+import { RootState } from "@/redux/store"; // Added RootState for activeDatasetName
+import { useToast } from "@/hooks/use-toast"; // Added useToast
 
 const ProductsTab: React.FC = () => {
   const dispatch = useDispatch();
+  const { toast } = useToast();
   const products = useSelector(selectProducts);
+  const activeDatasetName = useSelector((state: RootState) => state.ui.activeDatasetName);
+  // Memoize invoices for the active dataset to prevent unnecessary re-renders if selector logic is complex
+  const invoicesForCurrentDataset = useSelector((state: RootState) =>
+    activeDatasetName ? selectInvoices(state, activeDatasetName) : []
+  );
+
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editedProduct, setEditedProduct] = useState<any | null>(null);
+  const [editedProduct, setEditedProduct] = useState<any | null>(null); // Consider using a proper type for product
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const handleEdit = (product: any) => {
@@ -30,18 +40,45 @@ const ProductsTab: React.FC = () => {
 
   const handleSave = () => {
     if (editedProduct) {
-      dispatch(updateProduct(editedProduct));
-      if (
-        editedProduct.name !==
-        products.find((p) => p.id === editedProduct.id)?.name
-      ) {
-        dispatch(
-          updateInvoicesForProduct({
-            name: products.find((p) => p.id === editedProduct.id)?.name || "",
-            updates: { productName: editedProduct.name },
-          })
-        );
+      const originalProduct = products.find((p) => p.id === editedProduct.id);
+      const originalProductName = originalProduct?.name;
+
+      dispatch(updateProduct(editedProduct)); // Update the product itself
+
+      if (activeDatasetName && originalProductName && editedProduct.name !== originalProductName) {
+        if (invoicesForCurrentDataset.length > 0) {
+          let updatedInvoicesCount = 0;
+          invoicesForCurrentDataset.forEach((invoice: Invoice) => {
+            if (invoice.productName === originalProductName) {
+              dispatch(
+                updateInvoice({
+                  datasetName: activeDatasetName,
+                  id: invoice.id,
+                  updates: { productName: editedProduct.name },
+                })
+              );
+              updatedInvoicesCount++;
+            }
+          });
+          if (updatedInvoicesCount > 0) {
+            toast({
+              title: "Invoices Updated",
+              description: `${updatedInvoicesCount} invoice(s) in dataset '${activeDatasetName}' updated with new product name.`,
+            });
+          }
+        }
+      } else if (!activeDatasetName && originalProductName && editedProduct.name !== originalProductName) {
+        toast({
+          title: "Product Name Changed",
+          description: "Product name updated, but no active dataset selected to update associated invoices.",
+          variant: "warning",
+        });
       }
+
+      toast({
+        title: "Product Saved",
+        description: `Product "${editedProduct.name}" has been saved.`,
+      });
       setEditingId(null);
       setEditedProduct(null);
     }
